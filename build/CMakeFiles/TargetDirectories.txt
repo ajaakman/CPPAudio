@@ -1,0 +1,3 @@
+C:/dev/CPlusPlus/Portfolio/CPPAudio/build/CMakeFiles/AudioProject.dir
+C:/dev/CPlusPlus/Portfolio/CPPAudio/build/CMakeFiles/ALL_BUILD.dir
+C:/dev/CPlusPlus/Portfolio/CPPAudio/build/CMakeFiles/ZERO_CHECK.dir
