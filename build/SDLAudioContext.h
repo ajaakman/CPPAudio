@@ -1,12 +1,11 @@
 #pragma once
 
-#include "IAudioContext.h"
-
 #include <vector>
+#include "AudioObject.h"
 
 #include <SDL.h>
 
-class SDLAudioContext : public IAudioContext
+class SDLAudioContext
 {
 public:
 	SDLAudioContext();
@@ -14,6 +13,7 @@ public:
 	virtual void PlayAudio(AudioObject& ao);
 	virtual void PauseAudio(AudioObject& ao);
 	virtual void StopAudio(AudioObject& ao);
+	inline SDL_AudioDeviceID GetAudioDevice() { return m_Device; }
 
 	void GenerateSamples(Uint8* stream, int streamLen);
 private:

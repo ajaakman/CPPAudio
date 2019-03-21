@@ -4,6 +4,10 @@
     <ClCompile Include="C:\dev\CPlusPlus\Portfolio\CPPAudio\src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AudioObject.cpp" />
+    <ClCompile Include="SDLAudioContext.cpp" />
+    <ClCompile Include="SDLWAVAudioData.cpp" />
+    <ClCompile Include="SDLAudioDevice.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="C:\dev\CPlusPlus\Portfolio\CPPAudio\CMakeLists.txt" />
@@ -12,5 +16,15 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{80D70A06-21BE-3369-A3A1-DB958ABF2DD4}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AudioObject.h" />
+    <ClInclude Include="IAudioContext.h" />
+    <ClInclude Include="IAudioData.h" />
+    <ClInclude Include="IAudioDevice.h" />
+    <ClInclude Include="SampleInfo.h" />
+    <ClInclude Include="SDLAudioContext.h" />
+    <ClInclude Include="SDLWAVAudioData.h" />
+    <ClInclude Include="SDLAudioDevice.h" />
   </ItemGroup>
 </Project>

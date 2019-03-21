@@ -317,7 +317,11 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AudioObject.cpp" />
     <ClCompile Include="C:\dev\CPlusPlus\Portfolio\CPPAudio\src\main.cpp" />
+    <ClCompile Include="SDLAudioContext.cpp" />
+    <ClCompile Include="SDLAudioDevice.cpp" />
+    <ClCompile Include="SDLWAVAudioData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="C:\dev\CPlusPlus\Portfolio\CPPAudio\build\ZERO_CHECK.vcxproj">
@@ -326,6 +330,16 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AudioObject.h" />
+    <ClInclude Include="IAudioContext.h" />
+    <ClInclude Include="IAudioData.h" />
+    <ClInclude Include="IAudioDevice.h" />
+    <ClInclude Include="SampleInfo.h" />
+    <ClInclude Include="SDLAudioContext.h" />
+    <ClInclude Include="SDLAudioDevice.h" />
+    <ClInclude Include="SDLWAVAudioData.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

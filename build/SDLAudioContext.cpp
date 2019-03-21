@@ -25,8 +25,8 @@ SDLAudioContext::SDLAudioContext()
 	if (m_Device == 0)
 		std::cout << SDL_GetError() << " | Could not open audio device \n";
 
-	//int success = SDL_QueueAudio(device, wavStart, wavLength);
-	SDL_PauseAudioDevice(m_Device, 0);
+	//int success = SDL_QueueAudio(m_Device, wavStart, wavLength);
+	SDL_PauseAudioDevice(m_Device, 1);
 }
 
 SDLAudioContext::~SDLAudioContext()
@@ -40,6 +40,7 @@ void SDLAudioContext::PlayAudio(AudioObject & ao)
 
 	RemoveAudio(ao);
 	m_PlayingAudio.push_back(&ao);
+	SDL_PauseAudioDevice(m_Device, 0);
 
 	SDL_UnlockAudioDevice(m_Device);
 }
