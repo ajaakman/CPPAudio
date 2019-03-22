@@ -81,10 +81,9 @@
 class Sound
 {
 public:
-	Sound(const std::string& filepath, SDL_AudioSpec& audiospec)
-		:Volume(1.0)
+	Sound(const std::string& filepath, SDL_AudioSpec& audiospec, const double & volume)
+		:Volume(volume)
 	{	
-		std::cout << "construcer\n";
 		if (SDL_LoadWAV("./res/audio/TestFile16bit.wav", &audiospec, &Buffer, &TotalLength) == NULL)
 			std::cout << "Error: " << filepath << " cound not be loaded as an audio file" << std::endl;
 		Position = Buffer;
@@ -106,8 +105,8 @@ void MyAudioCallback(void* userdata, Uint8* stream, int streamLength);
 
 struct AudioData
 {
-	AudioData()
-		:MasterVolume(1.0)
+	AudioData(const double & volume = 1.0 )
+		:MasterVolume(volume)
 	{
 		SDL_memset(&wavSpec, 0, sizeof(wavSpec));
 		
@@ -130,89 +129,86 @@ struct AudioData
 		SDL_CloseAudioDevice(m_Device);
 	}
 
-	void Play(const Sound& sound)
+	void Play(const std::string & filepath, double volume = 1.0)
 	{
 		SDL_LockAudioDevice(m_Device);
-		sounds.emplace_front(sound);
+		if (volume > 1.0)
+			volume = 1.0;
+		else if (volume < 0.0)
+			volume = 0.0;
+		sounds.emplace_front(new Sound(filepath, wavSpec, volume));
 		SDL_UnlockAudioDevice(m_Device);
-	}
+	}	
 
-	Sint16 CurrentSample;
 	double MasterVolume;
-	std::forward_list<Sound> sounds;
+	std::forward_list<Sound*> sounds;
 	SDL_AudioSpec wavSpec;
-private:
 	SDL_AudioDeviceID m_Device;
+private:
 };
 
 void MyAudioCallback(void* userdata, Uint8* stream, int streamLength) // streamLength = samples * channels * bitdepth/8
 {
-	AudioData* audio = static_cast<AudioData*>(userdata);
-	
+	AudioData* audio = static_cast<AudioData*>(userdata);	
+
 	for (Uint32 i = 0; i < streamLength/2; ++i)
 	{
-		audio->CurrentSample = 0;
+		((Sint16*)stream)[i] = 0;
 		for (const auto & sound : audio->sounds)
-		{
-			if (sound.RemainingLength > streamLength / 2 - i)
+		{		
+			if (static_cast<Uint32>(streamLength)/2 - sound->RemainingLength/2 > i)
 			{
-				Sint16 addSample = reinterpret_cast<Sint16*>(sound.Position)[i] * sound.Volume;
+				Sint16 addSample = reinterpret_cast<Sint16*>(sound->Position)[i] * sound->Volume;
 				
-				if (audio->CurrentSample < 0)
+				if (((Sint16*)stream)[i] < 0)
 				{
-					if (addSample < -32768 - audio->CurrentSample)
-						audio->CurrentSample = -32768;
+					if (addSample < -32768 - ((Sint16*)stream)[i])
+						((Sint16*)stream)[i] = -32768;
 					else
-						audio->CurrentSample += addSample;
+						((Sint16*)stream)[i] += addSample;
 				}
 				else
 				{
-					if (addSample > 32767 - audio->CurrentSample)
-						audio->CurrentSample = 32767;
+					if (addSample > 32767 - ((Sint16*)stream)[i])
+						((Sint16*)stream)[i] = 32767;
 					else
-						audio->CurrentSample += addSample;
+						((Sint16*)stream)[i] += addSample;
 				}
 			}
-			//else std::cout << "cut end" << std::endl;
+			//else std::cout << sound->RemainingLength << "     " << i << std::endl;			
 		}
-
-		((Sint16*)stream)[i] = audio->CurrentSample * audio->MasterVolume;
+		((Sint16*)stream)[i] *= audio->MasterVolume;
 	}
-
+	
 	for (auto & sound : audio->sounds)
 	{
 		Uint32 length = (Uint32)streamLength;
-		length = (length > sound.RemainingLength ? sound.RemainingLength : length);
-		sound.Position += length;
-		sound.RemainingLength -= length;
+		length = (length > sound->RemainingLength ? sound->RemainingLength : length);
+		sound->Position += length;
+		sound->RemainingLength -= length;		
 	}
+
+	audio->sounds.remove_if([](Sound*& value) { if (value->RemainingLength) return false; else { delete value; return true; } } );
 }
 
 #undef main
 int main(int argc, char** argv)
 {
-	// Just to make sure SDL is working
 	SDL_Init(SDL_INIT_AUDIO);
 
-	AudioData audio;	
+	AudioData audio(1.0);	
 	
-	Sound s1("./res/audio/TestFile16bit.wav", audio.wavSpec);
-	audio.Play(s1);
+	audio.Play("./res/audio/TestFile16bit.wav", 0.2);
+
+	SDL_Delay(1000);	
+
+	audio.Play("./res/audio/TestFile16bit.wav", 0.3);
 
 	SDL_Delay(1000);
 
-	Sound s2("./res/audio/TestFile16bit.wav", audio.wavSpec);
-	audio.Play(s2);
+	audio.Play("./res/audio/TestFile16bit.wav", 0.3);
 
 	SDL_Delay(1000);
-
-	Sound s3("./res/audio/TestFile16bit.wav", audio.wavSpec);
-	audio.Play(s3);
-
-	SDL_Delay(1000);
-
-	Sound s4("./res/audio/TestFile16bit.wav", audio.wavSpec);
-	audio.Play(s4);
 
 	while (1);
 	
