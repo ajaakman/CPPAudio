@@ -34,7 +34,6 @@
 #include "../build/SDLAudioDevice.h"
 #include "../build/SDLAudioContext.h"
 
-#define FILE_PATH "./res/audio/testClip.wav"
 
 //#undef main
 //int main(int argc, char** argv)
@@ -80,36 +79,43 @@
 //}
 
 
-struct AudioData
+class AudioData
 {
-	Uint8* pos;
-	Uint32 length;
+public:
+	std::vector<Uint8*> pos;
+	std::vector<Uint32> length;
 };
 
-void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)
+void MyAudioCallback(void* userdata, Uint8* stream, int streamLength)// streamLength = samples * channels * numofbits/8
 {
 	AudioData* audio = (AudioData*)userdata;
-
-	if (audio->length == 0)
+			
+	
+	for (Uint32 i = 0; i < streamLength/2; i++)
 	{
-		return;
-	}
+		((Sint16*)stream)[i] = 0;
 
-	for (Uint32 i = 0; i < streamLength/2 ; i++)
+		for (int j = 0; j < audio->pos.size(); ++j)
+		{
+			if ((audio->length)[j] > streamLength / 2 - i)
+				((Sint16*)stream)[i] += (((Sint16*)((audio->pos)[j]))[i] * 0.5);
+			else
+				;//std::cout << "cut end" << std::endl;
+		}
+
+
+
+		((Sint16*)stream)[i] *= 0.1; // Master Volume
+	}
+	//SDL_memcpy(stream, audio->pos, length);
+
+	for (int j = 0; j < audio->pos.size(); ++j)
 	{
-		((Sint16*)audio->pos)[i] *= 0.1;
+		Uint32 length = (Uint32)streamLength;
+		length = (length > (audio->length)[j] ? (audio->length)[j] : length);
+		(audio->pos)[j] += length;
+		(audio->length)[j] -= length;
 	}
-	//std::cout << streamLength << std::endl; // sample * 4
-
-
-	Uint32 length = (Uint32)streamLength;
-	length = (length > audio->length ? audio->length : length);
-
-
-	SDL_memcpy(stream, audio->pos, length);
-
-	audio->pos += length;
-	audio->length -= length;
 }
 
 #undef main
@@ -119,34 +125,49 @@ int main(int argc, char** argv)
 	SDL_Init(SDL_INIT_AUDIO);
 
 	SDL_AudioSpec wavSpec;
-	Uint8* wavBuffer;
-	Uint32 wavLength;
-
-	if (SDL_LoadWAV(FILE_PATH, &wavSpec, &wavBuffer, &wavLength) == NULL)
-		std::cout << "Error: " << FILE_PATH << " cound not be loaded as an audio file" << std::endl;	
+	SDL_memset(&wavSpec, 0, sizeof(wavSpec));
 
 	AudioData audio;
-	audio.pos = wavBuffer;
-	audio.length = wavLength;
 
-	//SDL_memset(&wavSpec, 0, sizeof(wavSpec));
 	wavSpec.userdata = &audio;
-	wavSpec.channels = 2;
+	wavSpec.channels = 1;
 	wavSpec.freq = 44100;
 	wavSpec.format = AUDIO_S16SYS;
 	wavSpec.samples = 2048;
 	wavSpec.callback = MyAudioCallback;
 
 	SDL_AudioDeviceID device = SDL_OpenAudioDevice(NULL, 0, &wavSpec, NULL, 0);
+	SDL_PauseAudioDevice(device, 0);
 
 	if (device == 0)
 		std::cout << SDL_GetError() << " | Could not open audio device \n";
 
-	//int success = SDL_QueueAudio(device, wavStart, wavLength);
-	SDL_PauseAudioDevice(device, 0);
 
-	while (audio.length > 0)
-		SDL_Delay(100);
+
+	Uint8* wavBuffer;
+	Uint32 wavLength;
+
+	if (SDL_LoadWAV("./res/audio/TestFile16bit.wav", &wavSpec, &wavBuffer, &wavLength) == NULL)
+		std::cout << "Error: " << "./res/audio/testClip.wav" << " cound not be loaded as an audio file" << std::endl;	
+
+	audio.pos.push_back(wavBuffer);
+	audio.length.push_back(wavLength);
+
+	SDL_Delay(1000);
+
+	Uint8* wavBuffer1;
+	Uint32 wavLength1;
+
+	if (SDL_LoadWAV("./res/audio/TestFile16bit.wav", &wavSpec, &wavBuffer1, &wavLength1) == NULL)
+		std::cout << "Error: " << "./res/audio/testClip.wav" << " cound not be loaded as an audio file" << std::endl;
+
+	audio.pos.push_back(wavBuffer1);
+	audio.length.push_back(wavLength1);
+
+
+	//int success = SDL_QueueAudio(device, wavBuffer, wavLength);
+
+	while (1);
 
 	SDL_CloseAudioDevice(device);
 	SDL_FreeWAV(wavBuffer);
