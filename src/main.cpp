@@ -156,10 +156,10 @@ void MyAudioCallback(void* userdata, Uint8* stream, int streamLength) // streamL
 		((Sint16*)stream)[i] = 0;
 		for (const auto & sound : audio->sounds)
 		{		
-			if (static_cast<Uint32>(streamLength)/2 - sound->RemainingLength/2 > i)
-			{
-				Sint16 addSample = reinterpret_cast<Sint16*>(sound->Position)[i] * sound->Volume;
-				
+			if (sound->RemainingLength/2 > i)
+			{	
+				const Sint16 addSample = reinterpret_cast<Sint16*>(sound->Position)[i] * sound->Volume;
+
 				if (((Sint16*)stream)[i] < 0)
 				{
 					if (addSample < -32768 - ((Sint16*)stream)[i])
@@ -174,18 +174,16 @@ void MyAudioCallback(void* userdata, Uint8* stream, int streamLength) // streamL
 					else
 						((Sint16*)stream)[i] += addSample;
 				}
-			}
-			//else std::cout << sound->RemainingLength << "     " << i << std::endl;			
+			}			
 		}
 		((Sint16*)stream)[i] *= audio->MasterVolume;
 	}
 	
 	for (auto & sound : audio->sounds)
 	{
-		Uint32 length = (Uint32)streamLength;
-		length = (length > sound->RemainingLength ? sound->RemainingLength : length);
+		Uint32 length = ((Uint32)streamLength > sound->RemainingLength ? sound->RemainingLength : (Uint32)streamLength);
 		sound->Position += length;
-		sound->RemainingLength -= length;		
+		sound->RemainingLength -= length;
 	}
 
 	audio->sounds.remove_if([](Sound*& value) { if (value->RemainingLength) return false; else { delete value; return true; } } );
@@ -198,17 +196,17 @@ int main(int argc, char** argv)
 
 	AudioData audio(1.0);	
 	
-	audio.Play("./res/audio/TestFile16bit.wav", 0.2);
+	audio.Play("./res/audio/TestFile16bit.wav", 1.0);
 
-	SDL_Delay(1000);	
+	//SDL_Delay(1000);	
 
-	audio.Play("./res/audio/TestFile16bit.wav", 0.3);
+	//audio.Play("./res/audio/TestFile16bit.wav", 0.3);
 
-	SDL_Delay(1000);
+	//SDL_Delay(1000);
 
-	audio.Play("./res/audio/TestFile16bit.wav", 0.3);
+	//audio.Play("./res/audio/TestFile16bit.wav", 0.3);
 
-	SDL_Delay(1000);
+	//SDL_Delay(1000);
 
 	while (1);
 	
