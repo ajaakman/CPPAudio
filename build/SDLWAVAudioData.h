@@ -14,7 +14,7 @@ public:
 private:
 	Uint8* m_pPos;
 	Uint8* m_pStart;
-	Uint32 m_nLength;
+	Uint8* m_pEnd;
 	SDL_AudioSpec m_WavSpec;
 
 	SDLWAVAudioData(SDLWAVAudioData& other) { (void)other; }
