@@ -27,13 +27,14 @@
 #include <iostream>
 #include <SDL.h>
 #include <forward_list>
+#include <string>
 
-#include "../build/IAudioDevice.h"
-#include "../build/IAudioContext.h"
-#include "../build/AudioObject.h"
+//#include "../build/IAudioDevice.h"
+//#include "../build/IAudioContext.h"
+//#include "../build/AudioObject.h"
 
-#include "../build/SDLAudioDevice.h"
-#include "../build/SDLAudioContext.h"
+//#include "../build/SDLAudioDevice.h"
+//#include "../build/SDLAudioContext.h"
 
 
 //#undef main
@@ -84,7 +85,7 @@ public:
 	Sound(const std::string& filepath, SDL_AudioSpec& audiospec, const double & volume)
 		:Volume(volume)
 	{	
-		if (SDL_LoadWAV("./res/audio/TestFile16bit.wav", &audiospec, &Buffer, &TotalLength) == NULL)
+		if (SDL_LoadWAV(filepath.c_str(), &audiospec, &Buffer, &TotalLength) == NULL)
 			std::cout << "Error: " << filepath << " cound not be loaded as an audio file" << std::endl;
 		Position = Buffer;
 		RemainingLength = TotalLength;
@@ -106,7 +107,7 @@ void MyAudioCallback(void* userdata, Uint8* stream, int streamLength);
 struct AudioData
 {
 	AudioData(const double & volume = 1.0 )
-		:MasterVolume(volume)
+		:MasterVolume(volume), dTime(0.0)
 	{
 		SDL_memset(&wavSpec, 0, sizeof(wavSpec));
 		
@@ -144,6 +145,7 @@ struct AudioData
 	std::forward_list<Sound*> sounds;
 	SDL_AudioSpec wavSpec;
 	SDL_AudioDeviceID m_Device;
+	double dTime;
 private:
 };
 
@@ -154,6 +156,9 @@ void MyAudioCallback(void* userdata, Uint8* stream, int streamLength) // streamL
 	for (Uint32 i = 0; i < streamLength/2; ++i)
 	{
 		((Sint16*)stream)[i] = 0;
+
+		//((Sint16*)stream)[i] += Sint16(sin(440.0 * 6.28318530 * audio->dTime) * 32767);
+
 		for (const auto & sound : audio->sounds)
 		{		
 			if (sound->RemainingLength/2 > i)
@@ -177,6 +182,7 @@ void MyAudioCallback(void* userdata, Uint8* stream, int streamLength) // streamL
 			}			
 		}
 		((Sint16*)stream)[i] *= audio->MasterVolume;
+		audio->dTime += 1.0 / 44100.0;
 	}
 	
 	for (auto & sound : audio->sounds)
@@ -194,19 +200,30 @@ int main(int argc, char** argv)
 {
 	SDL_Init(SDL_INIT_AUDIO);
 
+	for (unsigned i = 0; i < SDL_GetNumAudioDevices(0); ++i) 
+		SDL_Log("Audio device %d: %s", i, SDL_GetAudioDeviceName(i, 0));	
+
+	for (unsigned i = 0; i < SDL_GetNumAudioDevices(1); ++i)
+		SDL_Log("Audio capture device %d: %s", i, SDL_GetAudioDeviceName(i, 0));
+	
+	for (unsigned i = 0; i < SDL_GetNumAudioDrivers(); ++i) 
+		printf("Audio driver %d: %s\n", i, SDL_GetAudioDriver(i));
+	
+
+
 	AudioData audio(1.0);	
 	
 	audio.Play("./res/audio/TestFile16bit.wav", 1.0);
 
-	//SDL_Delay(1000);	
+	SDL_Delay(1000);	
 
-	//audio.Play("./res/audio/TestFile16bit.wav", 0.3);
+	audio.Play("./res/audio/TestFile16bit.wav", 0.3);
 
-	//SDL_Delay(1000);
+	SDL_Delay(1000);
 
-	//audio.Play("./res/audio/TestFile16bit.wav", 0.3);
+	audio.Play("./res/audio/TestFile16bit.wav", 0.3);
 
-	//SDL_Delay(1000);
+	SDL_Delay(1000);
 
 	while (1);
 	
